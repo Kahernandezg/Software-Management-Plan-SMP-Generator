@@ -1,11 +1,7 @@
-<div align="center">
+# Research Data Management Plan (RDMP) Generator
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A Pen created on CodePen.
 
-  <h1>Built with AI Studio</h2>
+Original URL: [https://codepen.io/editor/Kevin_Gutier09/pen/019f43a4-1ab0-78db-81f4-0746a4d5704d](https://codepen.io/editor/Kevin_Gutier09/pen/019f43a4-1ab0-78db-81f4-0746a4d5704d).
 
-  <p>The fastest path from prompt to production with Gemini.</p>
-
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+Data management Plan-Open Source Tools

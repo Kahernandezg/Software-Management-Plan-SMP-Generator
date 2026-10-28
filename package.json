@@ -1,0 +1,16 @@
+{
+  "name": "rdmp-generator",
+  "version": "1.0.0",
+  "description": "Generador de Plan de Gestión de Software de Investigación (SMP)",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node -e \"console.log('Build completed')\"",
+    "lint": "node --check server.js && node --check src/script.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "jspdf": "^4.2.1"
+  }
+}
