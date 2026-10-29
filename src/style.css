@@ -79,7 +79,34 @@ body {
   margin: 4px 0 0;
   font-size: 12.5px;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.45;
+}
+.brand-text p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.brand-text p a,
+.topbar-ref-link {
+  color: #31527d;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(44, 94, 168, 0.28);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2.5px;
+  padding: 0 1px;
+  border-radius: 2px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease, background-color 0.15s ease;
+}
+.brand-text p a:hover,
+.topbar-ref-link:hover {
+  color: var(--primary);
+  text-decoration-color: var(--primary-light);
+  background-color: rgba(44, 94, 168, 0.05);
+}
+.brand-text p a:focus-visible,
+.topbar-ref-link:focus-visible {
+  outline: 2px solid rgba(44, 94, 168, 0.35);
+  outline-offset: 2px;
 }
 
 /* Institutional logos (top right) */
@@ -1368,5 +1395,365 @@ textarea {
     padding: 3px 10px;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*  ESTILOS DE AUTENTICACIÓN (MICROSOFT, ORCID, GITHUB)                      */
+/* -------------------------------------------------------------------------- */
+
+.auth-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.auth-section-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.01em;
+}
+
+.auth-section-subtitle {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.auth-buttons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.btn-auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.btn-auth:hover {
+  transform: translateY(-1.5px);
+}
+
+.btn-auth:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.auth-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.auth-btn-text {
+  letter-spacing: 0.01em;
+}
+
+/* Botón Microsoft */
+.btn-auth-microsoft {
+  background: #ffffff;
+  color: #1c2430;
+  border-color: #d0d7de;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.btn-auth-microsoft:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.09);
+}
+
+/* Botón ORCID (Verde Oficial #A6CE39) */
+.btn-auth-orcid {
+  background: #a6ce39;
+  color: #ffffff;
+  border-color: #94bb2e;
+  box-shadow: 0 2px 5px rgba(166, 206, 57, 0.28);
+}
+
+.btn-auth-orcid:hover {
+  background: #95ba2e;
+  border-color: #83a623;
+  box-shadow: 0 4px 10px rgba(166, 206, 57, 0.4);
+}
+
+/* Botón GitHub */
+.btn-auth-github {
+  background: #24292f;
+  color: #ffffff;
+  border-color: #1f2328;
+  box-shadow: 0 2px 5px rgba(36, 41, 47, 0.25);
+}
+
+.btn-auth-github:hover {
+  background: #1b1f24;
+  border-color: #121517;
+  box-shadow: 0 4px 10px rgba(36, 41, 47, 0.35);
+}
+
+/* Mensajes de Alerta y Estado */
+.auth-alert-box {
+  width: 100%;
+  max-width: 340px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: left;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  margin-top: 4px;
+}
+
+.auth-alert-box.info {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.guest-access-row {
+  margin-top: 2px;
+}
+
+.btn-guest-link {
+  background: transparent;
+  border: none;
+  color: #5b6b82;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(91, 107, 130, 0.35);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.btn-guest-link:hover {
+  color: var(--primary);
+  background: rgba(20, 49, 92, 0.05);
+}
+
+/* Contenedor de usuario en barra superior */
+.topbar-auth-container {
+  display: flex;
+  align-items: center;
+}
+
+.btn-topbar-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-topbar-login:hover {
+  background: #f0f5fc;
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.topbar-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  padding: 4px 10px 4px 6px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.user-avatar-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #eaf1fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(44, 94, 168, 0.15);
+  flex-shrink: 0;
+}
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-light);
+}
+
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-provider-badge {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  letter-spacing: 0.03em;
+}
+
+.btn-logout {
+  background: transparent;
+  border: none;
+  color: #718096;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  margin-left: 2px;
+}
+
+.btn-logout:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Modales de Autenticación */
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(10, 24, 47, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-modal-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 32px 30px 28px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #a0aec0;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.modal-close-btn:hover {
+  color: #1a202c;
+  background: #f7fafc;
+}
+
+.modal-header-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #eaf1fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.modal-header-icon.warning-icon {
+  background: #fffbeb;
+}
+
+.modal-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.modal-subtitle {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0 0 22px 0;
+}
+
+.modal-auth-grid {
+  width: 100%;
+}
+
 
 

@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "Perfil de Usuario",
+      "description": "Datos de perfil del usuario autenticado en el Generador de SMP",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 150 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "provider": { "type": "string", "maxLength": 50 },
+        "orcidId": { "type": "string", "maxLength": 25 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "SoftwareManagementPlan": {
+      "title": "Plan de Gestión de Software (SMP)",
+      "description": "Documento y formulario del Plan de Gestión de Software guardado por el usuario",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "nombreSoftware": { "type": "string", "maxLength": 200 },
+        "descripcion": { "type": "string", "maxLength": 5000 },
+        "proyectoAsociado": { "type": "string", "maxLength": 200 },
+        "nivel": { "type": "string", "maxLength": 50 },
+        "responsableLiberacion": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "nombreSoftware"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Almacén de perfiles de investigadores y personas autoras"
+    },
+    "/plans/{planId}": {
+      "schema": "SoftwareManagementPlan",
+      "description": "Planes de gestión de software creados y guardados por usuarios autenticados"
+    }
+  }
+}

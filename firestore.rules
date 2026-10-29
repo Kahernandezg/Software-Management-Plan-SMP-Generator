@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regla de denegación predeterminada
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Funciones auxiliares de seguridad
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             data.uid == request.auth.uid &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
+             (!('provider' in data) || (data.provider is string && data.provider.size() <= 50)) &&
+             (!('orcidId' in data) || (data.orcidId is string && data.orcidId.size() <= 25));
+    }
+
+    function isValidPlan(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.nombreSoftware is string && data.nombreSoftware.size() > 0 && data.nombreSoftware.size() <= 200 &&
+             (!('descripcion' in data) || (data.descripcion is string && data.descripcion.size() <= 5000)) &&
+             (!('proyectoAsociado' in data) || (data.proyectoAsociado is string && data.proyectoAsociado.size() <= 200)) &&
+             (!('nivel' in data) || (data.nivel is string && data.nivel.size() <= 50)) &&
+             (!('responsableLiberacion' in data) || (data.responsableLiberacion is string && data.responsableLiberacion.size() <= 150));
+    }
+
+    // Colección de perfiles de usuario
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming());
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming()) && incoming().uid == existing().uid;
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+    }
+
+    // Colección de planes de gestión de software
+    match /plans/{planId} {
+      allow get: if isSignedIn() && isValidId(planId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(planId) && isValidPlan(incoming());
+      allow update: if isSignedIn() && isValidId(planId) && isValidPlan(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && isValidId(planId) && resource.data.userId == request.auth.uid;
+    }
+  }
+}

@@ -455,6 +455,16 @@ function drawHeader(doc, pageW, margin, primary) {
 }
 
 function generatePDF(){
+  // Requisito: Bloquear la descarga del PDF si no hay sesión activa
+  if (!window.SMPAuth || !window.SMPAuth.isLoggedIn()) {
+    if (typeof window.openPdfAuthModal === "function") {
+      window.openPdfAuthModal();
+    } else {
+      alert("Para descargar el documento PDF del SMP debe iniciar sesión con Microsoft, ORCID o GitHub.");
+    }
+    return;
+  }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
   const pageW = 210, pageH = 297, margin = 18, contentW = pageW - margin*2;
@@ -463,218 +473,385 @@ function generatePDF(){
 
   // ---------- COVER ----------
   doc.setFillColor(...primary);
-  doc.rect(0,0,pageW,58,'F');
+  doc.rect(0, 0, pageW, 58, 'F');
   doc.setFillColor(...accent);
-  doc.roundedRect(20,14,20,20,4,4,'F');
-  doc.setDrawColor(255,255,255); doc.setLineWidth(1.1);
-  doc.line(26,20,23,24); doc.line(23,24,26,28);
-  doc.line(34,20,37,24); doc.line(37,24,34,28);
-  doc.line(31,18,29,30);
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+  doc.roundedRect(20, 14, 20, 20, 4, 4, 'F');
+  doc.setDrawColor(255, 255, 255); doc.setLineWidth(1.1);
+  doc.line(26, 20, 23, 24); doc.line(23, 24, 26, 28);
+  doc.line(34, 20, 37, 24); doc.line(37, 24, 34, 28);
+  doc.line(31, 18, 29, 30);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(255, 255, 255);
   doc.text('SOFTWARE MANAGEMENT PLAN', 48, 22);
-  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
   doc.text('Basado en SSI y Practical Guide to SMPs (eScience Center / NWO)', 48, 29);
-  doc.setFont('helvetica','bold'); doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
   doc.text('Plan de Gestión de', 48, 42);
   doc.text('Software (SMP)', 48, 50);
 
   // Logos institucionales (Micelio y VRII) en la esquina superior derecha
-  const micH1 = 9, micW1 = micH1*MICELIO_LOGO_WHITE_RATIO;
-  const vriiH1 = 15, vriiW1 = vriiH1*VRII_LOGO_WHITE_RATIO;
-  doc.addImage(VRII_LOGO_WHITE_B64, 'PNG', pageW-margin-vriiW1, 8, vriiW1, vriiH1);
-  doc.addImage(MICELIO_LOGO_WHITE_B64, 'PNG', pageW-margin-micW1, 8+vriiH1+3, micW1, micH1);
+  const micH1 = 9, micW1 = micH1 * MICELIO_LOGO_WHITE_RATIO;
+  const vriiH1 = 15, vriiW1 = vriiH1 * VRII_LOGO_WHITE_RATIO;
+  doc.addImage(VRII_LOGO_WHITE_B64, 'PNG', pageW - margin - vriiW1, 8, vriiW1, vriiH1);
+  doc.addImage(MICELIO_LOGO_WHITE_B64, 'PNG', pageW - margin - micW1, 8 + vriiH1 + 3, micW1, micH1);
 
-  y = 78;
+  // Título del software
+  y = 75;
   doc.setTextColor(...primary);
-  doc.setFont('helvetica','bold'); doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
   const titleLines = doc.splitTextToSize(state.nombreSoftware || 'Nombre del software sin definir', contentW);
   doc.text(titleLines, margin, y);
-  y += titleLines.length*8 + 4;
+  y += titleLines.length * 7.5 + 3;
 
-  const nivelSel = state.nivel[0];
-  if(nivelSel){
+  // Badge de nivel de gestión
+  const nivelSel = state.nivel && state.nivel[0];
+  if (nivelSel && NIVELES[nivelSel]) {
     const col = NIVELES[nivelSel].color;
     const rgb = hexToRgb(col);
+    const badgeText = `NIVEL DE GESTIÓN: ${nivelSel.toUpperCase()}`;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
+    const badgeW = doc.getTextWidth(badgeText) + 10;
     doc.setFillColor(rgb.r, rgb.g, rgb.b);
-    doc.roundedRect(margin, y, 46, 8, 3, 3, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
-    doc.text(`NIVEL DE GESTIÓN: ${nivelSel.toUpperCase()}`, margin+3, y+5.5);
-    y += 14;
-  } else { y += 6; }
+    doc.roundedRect(margin, y, badgeW, 7.2, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text(badgeText, margin + 5, y + 5);
+    y += 12;
+  } else {
+    y += 5;
+  }
 
-  doc.setDrawColor(...border); doc.setLineWidth(0.6);
-  doc.line(margin,y,pageW-margin,y);
-  y += 12;
+  doc.setDrawColor(...border); doc.setLineWidth(0.5);
+  doc.line(margin, y, pageW - margin, y);
+  y += 7;
+
+  // Tabla simétrica de metadatos de portada
+  const fechaRango = (state.fechaInicio && state.fechaFin)
+    ? `${fmtDate(state.fechaInicio)} a ${fmtDate(state.fechaFin)}`
+    : (state.fechaInicio ? `Desde ${fmtDate(state.fechaInicio)}` : (state.fechaFin ? `Hasta ${fmtDate(state.fechaFin)}` : '—'));
 
   const coverRows = [
-    ['Proyecto / financiamiento asociado', state.proyectoAsociado || '—'],
+    ['Proyecto o financiamiento asociado', state.proyectoAsociado || '—'],
     ['Responsable de liberación del software', state.responsableLiberacion || '—'],
-    ['Fecha de inicio', fmtDate(state.fechaInicio)],
-    ['Fecha de fin', fmtDate(state.fechaFin)],
-    ['Licencia', state.licencia.join('') || '—'],
-    ['Repositorio', state.repositorioTipo.join('') || '—'],
+    ['Fecha de inicio y fin del desarrollo', fechaRango],
+    ['Licencia de distribución', state.licencia.length ? state.licencia.join(', ') : '—'],
+    ['Tipo de repositorio', state.repositorioTipo.length ? state.repositorioTipo.join(', ') : '—'],
   ];
-  doc.setFontSize(10.5);
-  coverRows.forEach(row=>{
-    doc.setFont('helvetica','bold'); doc.setTextColor(...text);
-    doc.text(row[0]+':', margin, y);
-    doc.setFont('helvetica','normal'); doc.setTextColor(...muted);
-    const lines = doc.splitTextToSize(row[1], contentW-78);
-    doc.text(lines, margin+78, y);
-    y += Math.max(lines.length*5.2, 7);
+
+  const col1W = 72;
+  const col2W = contentW - col1W;
+
+  coverRows.forEach((row, idx) => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+    const lLines = doc.splitTextToSize(row[0] + ':', col1W - 8);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    const vLines = doc.splitTextToSize(row[1], col2W - 8);
+    const rowH = Math.max(lLines.length * 4.2, vLines.length * 4.2) + 4.5;
+
+    doc.setFillColor(idx % 2 === 0 ? 248 : 255, idx % 2 === 0 ? 250 : 255, idx % 2 === 0 ? 253 : 255);
+    doc.setDrawColor(...border); doc.setLineWidth(0.25);
+    doc.rect(margin, y, contentW, rowH, 'FD');
+
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...primary);
+    doc.text(lLines, margin + 4, y + 4.5);
+
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(...text);
+    doc.text(vLines, margin + col1W + 4, y + 4.5);
+
+    y += rowH;
   });
 
-  y += 8;
+  // Nota de autoría y citación metodológica
+  y += 7;
+  const noteText = 'Documento generado con la Herramienta de captura de metadatos SMP, cuya estructura se basa en "Writing and using a software management plan" (Software Sustainability Institute) y "Practical guide to Software Management Plans" de Martinez-Ortiz et al., Netherlands eScience Center / NWO (DOI: 10.5281/zenodo.7038280), adoptada por la Universidad de Maastricht.';
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8);
+  const noteLines = doc.splitTextToSize(noteText, contentW - 12);
+  const noteBoxH = noteLines.length * 3.8 + 17;
+
   doc.setFillColor(...lightBg);
-  doc.roundedRect(margin, y, contentW, 30, 2, 2, 'F');
-  doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(...muted);
-  doc.text(doc.splitTextToSize('Documento generado con la Herramienta de captura de metadatos SMP, cuya estructura se basa en "Writing and using a software management plan" (Software Sustainability Institute) y "Practical guide to Software Management Plans" de Martinez-Ortiz et al., Netherlands eScience Center / NWO (DOI: 10.5281/zenodo.7038280), adoptada por la Universidad de Maastricht.', contentW-10), margin+5, y+6);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  doc.text('Generado el ' + new Date().toLocaleDateString('es-SV', {year:'numeric',month:'long',day:'numeric'}), margin+5, y+20);
-  drawCCIcon(doc, margin+8, y+25, 2.4, muted);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8);
-  doc.text('Licencia Creative Commons Atribución 4.0 (CC BY 4.0)   ·   Powered by: Claude · Vicerrectoría de Investigación e Innovación UCA', margin+15, y+26);
+  doc.setDrawColor(...border); doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentW, noteBoxH, 2, 2, 'FD');
+
+  doc.setTextColor(...muted);
+  let ny = y + 4.6;
+  noteLines.forEach(l => {
+    doc.text(l, margin + 6, ny);
+    ny += 3.8;
+  });
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...text);
+  doc.text('Generado el ' + new Date().toLocaleDateString('es-SV', {year:'numeric',month:'long',day:'numeric'}), margin + 6, ny + 3);
+
+  drawCCIcon(doc, margin + 6, ny + 8.5, 2.0, muted);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...muted);
+  doc.text('Licencia Creative Commons Atribución 4.0 (CC BY 4.0)   ·   Powered by: Claude · Vicerrectoría de Investigación e Innovación UCA', margin + 17, ny + 9.2);
 
   // ---------- CONTENT PAGES ----------
   doc.addPage();
-  y = 24;
+  y = 22;
   drawHeader(doc, pageW, margin, primary);
 
   function ensureSpace(h){
-    if(y + h > pageH - 26){
+    if (y + h > pageH - 24) {
       doc.addPage();
-      y = 24;
+      y = 22;
       drawHeader(doc, pageW, margin, primary);
     }
   }
 
   function sectionTitle(num, title){
-    ensureSpace(14);
+    ensureSpace(34); // Evita títulos huérfanos sin campos debajo
     doc.setFillColor(...primary);
-    doc.rect(margin, y, contentW, 9, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
-    doc.text(`${num}. ${title.toUpperCase()}`, margin+4, y+6.2);
-    y += 15;
+    doc.roundedRect(margin, y, contentW, 8.5, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(255, 255, 255);
+    doc.text(`${num}. ${title.toUpperCase()}`, margin + 4, y + 5.8);
+    y += 13;
   }
 
   function levelTag(levels){
-    if(!levels) return '';
-    const names = {B:'Bajo',M:'Medio',A:'Alto'};
-    return ' · Nivel(es): ' + levels.map(l=>names[l]).join(', ');
+    if(!levels || !levels.length) return '';
+    const names = { B:'Bajo', M:'Medio', A:'Alto' };
+    return ' · Nivel(es): ' + levels.map(l => names[l] || l).join(', ');
   }
 
   function fieldRow(label, value, levels){
-    const val = (value && value.toString().trim()) ? value : '—';
-    doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
-    const labelLines = doc.splitTextToSize(label + (levels? levelTag(levels):''), contentW);
-    ensureSpace(labelLines.length*4.6 + 4);
-    doc.setFillColor(...lightBg);
-    doc.rect(margin, y-4, contentW, labelLines.length*4.6+3, 'F');
-    doc.setTextColor(...primary);
-    doc.text(labelLines, margin+3, y);
-    y += labelLines.length*4.6 + 3;
+    const fullLabel = label + (levels ? levelTag(levels) : '');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.2);
+    const labelLines = doc.splitTextToSize(fullLabel, contentW - 8);
+    const headerH = labelLines.length * 4.3 + 3.5;
 
-    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...text);
-    const valueLines = doc.splitTextToSize(val, contentW-6);
-    ensureSpace(valueLines.length*4.6 + 8);
-    doc.text(valueLines, margin+3, y);
-    y += valueLines.length*4.6 + 9;
+    ensureSpace(headerH + 16); // Encabezado y al menos 2-3 líneas de contenido
+
+    doc.setFillColor(...lightBg);
+    doc.setDrawColor(...border); doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, contentW, headerH, 1.5, 1.5, 'FD');
+    doc.setTextColor(...primary);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.2);
+    let ly = y + 4.2;
+    labelLines.forEach(l => {
+      doc.text(l, margin + 4, ly);
+      ly += 4.3;
+    });
+    y += headerH;
+
+    const val = (value && value.toString().trim()) ? value.toString().trim() : '—';
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.setTextColor(...(val === '—' ? muted : text));
+    const valueLines = doc.splitTextToSize(val, contentW - 8);
+
+    let vy = y + 4.5;
+    valueLines.forEach(line => {
+      if (vy > pageH - 24) {
+        doc.addPage();
+        drawHeader(doc, pageW, margin, primary);
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(...muted);
+        doc.text(`(Continuación: ${label.slice(0, 50)}${label.length > 50 ? '...' : ''})`, margin + 4, 20);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...text);
+        vy = 26;
+      }
+      doc.text(line, margin + 4, vy);
+      vy += 4.5;
+    });
+    y = vy + 3.5;
   }
 
-  function subCard(lines){
-    const wrapped = [];
-    lines.forEach(l=>{ wrapped.push(...doc.splitTextToSize(l, contentW-10)); });
-    const h = wrapped.length*4.4 + 8;
-    ensureSpace(h+4);
-    doc.setDrawColor(...primaryLight); doc.setLineWidth(0.3);
-    doc.roundedRect(margin, y-4, contentW, h, 1.5, 1.5, 'S');
-    doc.setFontSize(9); doc.setTextColor(...text);
-    let ly = y+1;
-    wrapped.forEach((l,i)=>{
-      doc.setFont('helvetica', i===0?'bold':'normal');
-      if(i===0) doc.setTextColor(...primary); else doc.setTextColor(...text);
-      doc.text(l, margin+4, ly);
-      ly += 4.4;
+  function renderNivelSection() {
+    const nivelSelected = state.nivel && state.nivel[0];
+    const fullLabel = 'Nivel de gestión de software requerido';
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.2);
+    const labelLines = doc.splitTextToSize(fullLabel, contentW - 8);
+    const headerH = labelLines.length * 4.3 + 3.5;
+
+    ensureSpace(headerH + 28);
+
+    doc.setFillColor(...lightBg);
+    doc.setDrawColor(...border); doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, contentW, headerH, 1.5, 1.5, 'FD');
+    doc.setTextColor(...primary);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.2);
+    doc.text(labelLines, margin + 4, y + 4.2);
+    y += headerH + 3;
+
+    if (!nivelSelected || !NIVELES[nivelSelected]) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...muted);
+      doc.text('— No especificado', margin + 4, y + 4);
+      y += 9;
+      return;
+    }
+
+    const nivelObj = NIVELES[nivelSelected];
+    const rgb = hexToRgb(nivelObj.color);
+    const pillText = `NIVEL SELECCIONADO: ${nivelSelected.toUpperCase()}`;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
+    const pillW = doc.getTextWidth(pillText) + 10;
+
+    doc.setFillColor(rgb.r, rgb.g, rgb.b);
+    doc.roundedRect(margin + 4, y, pillW, 6.5, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text(pillText, margin + 9, y + 4.5);
+
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(...muted);
+    const ejLines = doc.splitTextToSize(nivelObj.ejemplo, contentW - pillW - 14);
+    doc.text(ejLines, margin + pillW + 10, y + 4.5);
+    y += Math.max(ejLines.length * 3.8, 6.5) + 3.5;
+
+    // Desglose estructurado de características del nivel
+    const descParts = nivelObj.desc.split('<b>').filter(Boolean).map(p => {
+      const [tag, ...rest] = p.split('</b>');
+      return { label: tag.replace(':', '').trim(), text: rest.join('</b>').trim() };
     });
-    y += h + 5;
+
+    descParts.forEach(part => {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
+      const lText = `• ${part.label}: `;
+      const lWidth = doc.getTextWidth(lText);
+
+      doc.setFont('helvetica', 'normal');
+      const textLines = doc.splitTextToSize(part.text, contentW - lWidth - 12);
+
+      if (y + textLines.length * 4.2 > pageH - 24) {
+        doc.addPage();
+        drawHeader(doc, pageW, margin, primary);
+        y = 24;
+      }
+
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(...primary);
+      doc.text(lText, margin + 6, y + 3.8);
+
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(...text);
+      doc.text(textLines, margin + 6 + lWidth, y + 3.8);
+      y += textLines.length * 4.2 + 1.5;
+    });
+    y += 3.5;
+  }
+
+  function renderTeamSection() {
+    const fullLabel = 'Equipo responsable';
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.2);
+    const labelLines = doc.splitTextToSize(fullLabel, contentW - 8);
+    const headerH = labelLines.length * 4.3 + 3.5;
+
+    ensureSpace(headerH + 20);
+
+    doc.setFillColor(...lightBg);
+    doc.setDrawColor(...border); doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, contentW, headerH, 1.5, 1.5, 'FD');
+    doc.setTextColor(...primary);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.2);
+    doc.text(labelLines, margin + 4, y + 4.2);
+    y += headerH + 3;
+
+    const validMembers = state.equipo.filter(m => m.nombre && m.nombre.trim());
+    if (validMembers.length === 0) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...muted);
+      doc.text('— Sin integrantes registrados', margin + 4, y + 4);
+      y += 9;
+      return;
+    }
+
+    validMembers.forEach((m, i) => {
+      const lines = [
+        `${i + 1}. ${m.nombre.trim()}${m.rol && m.rol.trim() ? ' — ' + m.rol.trim() : ''}`,
+        m.institucion && m.institucion.trim() ? m.institucion.trim() : null,
+        m.orcid && m.orcid.trim() ? 'ORCID: ' + m.orcid.trim() : null
+      ].filter(Boolean);
+
+      const wrappedLines = [];
+      lines.forEach((l, idx) => {
+        doc.setFont('helvetica', idx === 0 ? 'bold' : 'normal');
+        doc.setFontSize(idx === 0 ? 9 : 8.5);
+        wrappedLines.push({
+          textLines: doc.splitTextToSize(l, contentW - 12),
+          isHeader: idx === 0,
+          isOrcid: idx === 2 || (idx === 1 && !m.institucion)
+        });
+      });
+
+      let totalTextLines = 0;
+      wrappedLines.forEach(w => totalTextLines += w.textLines.length);
+      const cardH = totalTextLines * 4.2 + 5.5;
+
+      if (y + cardH > pageH - 24) {
+        doc.addPage();
+        drawHeader(doc, pageW, margin, primary);
+        y = 24;
+      }
+
+      doc.setFillColor(252, 253, 255);
+      doc.setDrawColor(...border); doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, contentW, cardH, 1.5, 1.5, 'FD');
+
+      let cy = y + 4.2;
+      wrappedLines.forEach(w => {
+        doc.setFont('helvetica', w.isHeader ? 'bold' : 'normal');
+        doc.setFontSize(w.isHeader ? 9 : 8.5);
+        doc.setTextColor(...(w.isHeader ? primary : (w.isOrcid ? muted : text)));
+        doc.text(w.textLines, margin + 5, cy);
+        cy += w.textLines.length * 4.2;
+      });
+      y += cardH + 2.5;
+    });
+    y += 2;
   }
 
   // Section 1
-  sectionTitle('1','Propósito y nivel de gestión del software');
+  sectionTitle('1', 'Propósito y nivel de gestión del software');
   fieldRow('Nombre del software', state.nombreSoftware);
-  fieldRow('Descripción y propósito', state.descripcion, ['B','M','A']);
+  fieldRow('Descripción y propósito', state.descripcion, ['B', 'M', 'A']);
   fieldRow('Proyecto de investigación / financiamiento asociado', state.proyectoAsociado);
-  fieldRow('Nivel de gestión de software requerido', state.nivel.join('') + (state.nivel[0] ? ' — ' + NIVELES[state.nivel[0]].desc.replace(/<[^>]+>/g,'') : ''));
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(9.5); ensureSpace(8);
-  doc.setFillColor(...lightBg); doc.rect(margin,y-4,contentW,7,'F');
-  doc.setTextColor(...primary); doc.text('Equipo responsable', margin+3, y);
-  y += 9;
-  const validMembers = state.equipo.filter(m=>m.nombre.trim());
-  if(validMembers.length===0){ subCard(['Sin integrantes registrados']); }
-  validMembers.forEach((m,i)=>{
-    subCard([
-      `${i+1}. ${m.nombre}${m.rol? ' — '+m.rol:''}`,
-      m.institucion || '',
-      (m.orcid? 'ORCID: '+m.orcid : '')
-    ].filter(Boolean));
-  });
-  y += 2;
-
-  fieldRow('Fecha de inicio y fin del desarrollo', `${fmtDate(state.fechaInicio)} a ${fmtDate(state.fechaFin)}`);
+  renderNivelSection();
+  renderTeamSection();
+  fieldRow('Fecha de inicio y fin del desarrollo', fechaRango);
   fieldRow('Responsable de liberar/publicar el software', state.responsableLiberacion);
 
   // Section 2
-  sectionTitle('2','Control de versiones y repositorio');
-  fieldRow('¿Cómo se gestionará el versionado del software?', state.controlVersiones, ['B','M','A']);
-  fieldRow('Tipo de repositorio', state.repositorioTipo.join(''), ['M','A']);
-  fieldRow('¿Dónde se hará disponible el software públicamente?', state.repositorioUrl, ['M','A']);
+  sectionTitle('2', 'Control de versiones y repositorio');
+  fieldRow('¿Cómo se gestionará el versionado del software?', state.controlVersiones, ['B', 'M', 'A']);
+  fieldRow('Tipo de repositorio', state.repositorioTipo.length ? state.repositorioTipo.join(', ') : '', ['M', 'A']);
+  fieldRow('¿Dónde se hará disponible el software públicamente?', state.repositorioUrl, ['M', 'A']);
   fieldRow('Justificación si no será público', state.justificacionPrivado);
-  fieldRow('Guías de contribución y estructura de gobernanza', state.gobernanza, ['M','A']);
+  fieldRow('Guías de contribución y estructura de gobernanza', state.gobernanza, ['M', 'A']);
 
   // Section 3
-  sectionTitle('3','Documentación');
-  fieldRow('Documentación para personas usuarias', state.docUsuario, ['B','M','A']);
-  fieldRow('Documentación de instalación y despliegue', state.docInstalacion, ['B','M','A']);
-  fieldRow('Documentación para futuras personas desarrolladoras', state.docDesarrollador, ['M','A']);
-  fieldRow('Dependencias técnicas y de hardware', state.dependencias, ['M','A']);
+  sectionTitle('3', 'Documentación');
+  fieldRow('Documentación para personas usuarias', state.docUsuario, ['B', 'M', 'A']);
+  fieldRow('Documentación de instalación y despliegue', state.docInstalacion, ['B', 'M', 'A']);
+  fieldRow('Documentación para futuras personas desarrolladoras', state.docDesarrollador, ['M', 'A']);
+  fieldRow('Dependencias técnicas y de hardware', state.dependencias, ['M', 'A']);
 
   // Section 4
-  sectionTitle('4','Pruebas y calidad de ingeniería de software');
-  fieldRow('¿Cómo se probará el software?', state.estrategiaPruebas, ['M','A']);
-  fieldRow('Herramientas de integración/despliegue continuo (CI/CD)', state.integracionContinua, ['M','A']);
-  fieldRow('Estándares o listas de verificación de calidad utilizados', state.calidadEstandares, ['M','A']);
+  sectionTitle('4', 'Pruebas y calidad de ingeniería de software');
+  fieldRow('¿Cómo se probará el software?', state.estrategiaPruebas, ['M', 'A']);
+  fieldRow('Herramientas de integración/despliegue continuo (CI/CD)', state.integracionContinua, ['M', 'A']);
+  fieldRow('Estándares o listas de verificación de calidad utilizados', state.calidadEstandares, ['M', 'A']);
 
   // Section 5
-  sectionTitle('5','Empaquetado, licenciamiento y citación');
-  fieldRow('¿Cómo se empaquetará y distribuirá el software?', state.empaquetado, ['M','A']);
-  fieldRow('Licencia del software', state.licencia.join(''), ['B','M','A']);
-  fieldRow('Compatibilidad con licencias de dependencias de terceros', state.compatibilidadLicencias, ['B','M','A']);
-  fieldRow('¿Cómo podrán citar el software las personas que lo usen?', state.citacion, ['M','A']);
+  sectionTitle('5', 'Empaquetado, licenciamiento y citación');
+  fieldRow('¿Cómo se empaquetará y distribuirá el software?', state.empaquetado, ['M', 'A']);
+  fieldRow('Licencia del software', state.licencia.length ? state.licencia.join(', ') : '', ['B', 'M', 'A']);
+  fieldRow('Compatibilidad con licencias de dependencias de terceros', state.compatibilidadLicencias, ['B', 'M', 'A']);
+  fieldRow('¿Cómo podrán citar el software las personas que lo usen?', state.citacion, ['M', 'A']);
 
   // Section 6
-  sectionTitle('6','Mantenimiento, soporte y preservación a largo plazo');
-  fieldRow('¿Cómo se procurará el mantenimiento a largo plazo del software?', state.mantenimiento, ['M','A']);
+  sectionTitle('6', 'Mantenimiento, soporte y preservación a largo plazo');
+  fieldRow('¿Cómo se procurará el mantenimiento a largo plazo del software?', state.mantenimiento, ['M', 'A']);
   fieldRow('Nivel de soporte ofrecido y cómo se organizará', state.soporte, ['A']);
   fieldRow('Riesgos externos a considerar', state.riesgos, ['A']);
-  fieldRow('Preservación y archivo a largo plazo', state.preservacion, ['M','A']);
+  fieldRow('Preservación y archivo a largo plazo', state.preservacion, ['M', 'A']);
 
-  // Footer on all pages
+  // Numeración de páginas y pie de página en todas las páginas de contenido
   const totalPages = doc.internal.getNumberOfPages();
-  for(let p=2; p<=totalPages; p++){
+  for (let p = 2; p <= totalPages; p++) {
     doc.setPage(p);
     doc.setDrawColor(...border); doc.setLineWidth(0.3);
-    doc.line(margin, pageH-19, pageW-margin, pageH-19);
+    doc.line(margin, pageH - 18, pageW - margin, pageH - 18);
 
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...muted);
-    doc.text('Plan de Gestión de Software (SMP)', margin, pageH-15);
-    doc.text(`Página ${p-1} de ${totalPages-1}`, pageW-margin-25, pageH-15);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...muted);
+    doc.text('Plan de Gestión de Software (SMP)', margin, pageH - 13);
+    doc.text(`Página ${p - 1} de ${totalPages - 1}`, pageW - margin, pageH - 13, { align: 'right' });
 
-    drawCCIcon(doc, margin+2.2, pageH-8, 1.9, muted);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7);
-    doc.text('CC BY 4.0 · Powered by: Claude · Vicerrectoría de Investigación e Innovación UCA', margin+7.5, pageH-7.2);
+    drawCCIcon(doc, margin + 2.5, pageH - 7, 1.8, muted);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+    doc.text('CC BY 4.0 · Powered by: Claude · Vicerrectoría de Investigación e Innovación UCA', margin + 11.5, pageH - 6.2);
   }
-
 
   const fileName = (state.nombreSoftware ? state.nombreSoftware.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_').slice(0,60) : 'plan_gestion_software');
   doc.save(`SMP_${fileName || 'sin_titulo'}.pdf`);
@@ -750,9 +927,18 @@ function initWelcomeSplash() {
     }
   }
 
-  // La interfaz se queda estática hasta que el usuario dé clic en el botón de entrar
+  // Exponer globalmente para permitir descartar la pantalla al autenticarse
+  window.finishSplash = finishSplash;
+
+  // Botón de entrar o saltar si existiera
   if (enterBtn) {
     enterBtn.addEventListener("click", finishSplash);
+  }
+
+  // Botón de acceso como invitado
+  const guestBtn = document.getElementById("splashGuestBtn");
+  if (guestBtn) {
+    guestBtn.addEventListener("click", finishSplash);
   }
 
   // Permitir también entrar presionando Enter
@@ -863,7 +1049,180 @@ function initWelcomeSplash() {
   };
 }
 
+/* ---------------------------- AUTENTICACIÓN INSTITUCIONAL (SMPAuth) ---------------------------- */
+
+function showAuthAlert(message, isInfo = false) {
+  const alertEls = [
+    document.getElementById("splashAuthAlert"),
+    document.getElementById("modalAuthAlert"),
+    document.getElementById("pdfModalAuthAlert")
+  ];
+  alertEls.forEach((el) => {
+    if (el) {
+      el.textContent = message || "";
+      el.className = isInfo ? "auth-alert-box info" : "auth-alert-box";
+      el.style.display = message ? "block" : "none";
+    }
+  });
+}
+
+function clearAuthAlert() {
+  showAuthAlert("");
+}
+
+window.openLoginModal = function () {
+  clearAuthAlert();
+  const m = document.getElementById("loginModal");
+  if (m) m.style.display = "flex";
+};
+
+window.closeLoginModal = function () {
+  const m = document.getElementById("loginModal");
+  if (m) m.style.display = "none";
+};
+
+window.openPdfAuthModal = function () {
+  clearAuthAlert();
+  const m = document.getElementById("pdfAuthRequiredModal");
+  if (m) m.style.display = "flex";
+};
+
+window.closePdfAuthModal = function () {
+  const m = document.getElementById("pdfAuthRequiredModal");
+  if (m) m.style.display = "none";
+};
+
+window.handleLoginMicrosoft = async function () {
+  clearAuthAlert();
+  if (!window.SMPAuth) {
+    showAuthAlert("El módulo de autenticación no se ha cargado todavía. Por favor recargue la página.");
+    return;
+  }
+  const res = await window.SMPAuth.loginWithMicrosoft();
+  if (!res.success) {
+    showAuthAlert(res.errorMessage || "Error al autenticarse con Microsoft.");
+  } else {
+    closeLoginModal();
+    closePdfAuthModal();
+    if (window.finishSplash) window.finishSplash();
+  }
+};
+
+window.handleLoginGithub = async function () {
+  clearAuthAlert();
+  if (!window.SMPAuth) {
+    showAuthAlert("El módulo de autenticación no se ha cargado todavía. Por favor recargue la página.");
+    return;
+  }
+  const res = await window.SMPAuth.loginWithGithub();
+  if (!res.success) {
+    showAuthAlert(res.errorMessage || "Error al autenticarse con GitHub.");
+  } else {
+    closeLoginModal();
+    closePdfAuthModal();
+    if (window.finishSplash) window.finishSplash();
+  }
+};
+
+window.handleLoginOrcid = async function () {
+  clearAuthAlert();
+  if (!window.SMPAuth) {
+    showAuthAlert("El módulo de autenticación no se ha cargado todavía. Por favor recargue la página.");
+    return;
+  }
+  const res = await window.SMPAuth.loginWithOrcid();
+  if (!res.success) {
+    showAuthAlert(res.errorMessage || "Error al autenticarse con ORCID.");
+  } else {
+    // Si el usuario entra con ORCID:
+    // 1. Rellenar el campo ORCID del formulario con su ORCID iD (editable)
+    // 2. Rellenar también el nombre del responsable de liberación
+    if (res.orcidId) {
+      if (!Array.isArray(state.equipo) || state.equipo.length === 0) {
+        state.equipo = [emptyMember()];
+      }
+      state.equipo[0].orcid = res.orcidId;
+    }
+    const displayName = (res.user && res.user.displayName) ? res.user.displayName : "";
+    if (displayName) {
+      if (!state.responsableLiberacion) {
+        state.responsableLiberacion = displayName;
+      }
+      if (!state.equipo[0].nombre) {
+        state.equipo[0].nombre = displayName;
+      }
+    }
+    render();
+    closeLoginModal();
+    closePdfAuthModal();
+    if (window.finishSplash) window.finishSplash();
+  }
+};
+
+window.handleLogout = async function () {
+  if (!window.SMPAuth) return;
+  await window.SMPAuth.logout();
+};
+
+function updateAuthUI(user) {
+  const topbarUnauth = document.getElementById("topbarUnauthenticated");
+  const topbarAuth = document.getElementById("topbarAuthenticated");
+  const topbarUserName = document.getElementById("topbarUserName");
+  const topbarUserPhoto = document.getElementById("topbarUserPhoto");
+  const topbarFallback = document.getElementById("topbarUserAvatarFallback");
+  const topbarBadge = document.getElementById("topbarProviderBadge");
+
+  if (user) {
+    if (topbarUnauth) topbarUnauth.style.display = "none";
+    if (topbarAuth) topbarAuth.style.display = "inline-flex";
+
+    const name = user.displayName || user.email || "Investigador/a";
+    if (topbarUserName) topbarUserName.textContent = name;
+
+    // Identificar proveedor
+    let providerLabel = "Institucional";
+    if (user.providerData && user.providerData.length > 0) {
+      const pid = user.providerData[0].providerId;
+      if (pid === "microsoft.com") providerLabel = "Microsoft";
+      else if (pid === "github.com") providerLabel = "GitHub";
+      else if (pid === "oidc.orcid" || pid.includes("orcid")) providerLabel = "ORCID";
+    }
+    if (topbarBadge) topbarBadge.textContent = providerLabel;
+
+    // Foto de perfil
+    if (user.photoURL && topbarUserPhoto) {
+      topbarUserPhoto.src = user.photoURL;
+      topbarUserPhoto.style.display = "block";
+      if (topbarFallback) topbarFallback.style.display = "none";
+    } else {
+      if (topbarUserPhoto) topbarUserPhoto.style.display = "none";
+      if (topbarFallback) topbarFallback.style.display = "flex";
+    }
+
+    // Si ya hay sesión activa persistida al cargar, descartar el splash automáticamente
+    if (window.finishSplash) {
+      window.finishSplash();
+    }
+  } else {
+    if (topbarUnauth) topbarUnauth.style.display = "block";
+    if (topbarAuth) topbarAuth.style.display = "none";
+  }
+}
+
+function setupAuthObserver() {
+  if (window.SMPAuth && typeof window.SMPAuth.onAuthStateChange === "function") {
+    window.SMPAuth.onAuthStateChange((user) => {
+      updateAuthUI(user);
+    });
+  } else {
+    // Si auth.js aún no terminó de cargar por ser módulo asíncrono, reintentar brevemente
+    setTimeout(setupAuthObserver, 120);
+  }
+}
+
 /* ---------------------------- INIT ---------------------------- */
 render();
 initWelcomeSplash();
+setupAuthObserver();
+
 

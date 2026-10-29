@@ -12,6 +12,11 @@ const HOST = process.env.HOST || '0.0.0.0';
 // Serve static assets from src folder
 app.use(express.static(path.join(__dirname, 'src')));
 
+// Serve firebase configuration
+app.get('/firebase-applet-config.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'firebase-applet-config.json'));
+});
+
 // SPA fallback to index.html
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'src', 'index.html'));

@@ -22,6 +22,7 @@ Powered by: Claude.ai/Google AI Studio
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script type="module" src="auth.js"></script>
   </head>
   <body>
     <!-- Pantalla de Bienvenida y Transición Institucional (VRII) -->
@@ -63,15 +64,61 @@ Powered by: Claude.ai/Google AI Studio
         </div>
 
         <div class="splash-action-container" id="splashActionContainer">
-          <button id="splashEnterBtn" class="splash-enter-btn" type="button" title="Ingresar al Generador de SMP">
-            <span class="btn-text">Entrar al Generador</span>
-            <span class="btn-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </span>
-          </button>
+          <div class="auth-section-header">
+            <span class="auth-section-title">Acceso Institucional y Científico</span>
+            <span class="auth-section-subtitle">Inicie sesión para crear, persistir y descargar su Plan de Gestión de Software</span>
+          </div>
+
+          <div class="auth-buttons-grid">
+            <!-- Botón 1: Microsoft (Institucional UCA / Cuentas Microsoft) -->
+            <button id="splashBtnMicrosoft" class="btn-auth btn-auth-microsoft" type="button" title="Iniciar sesión con cuenta Microsoft institucional o personal" onclick="handleLoginMicrosoft()">
+              <span class="auth-btn-icon">
+                <svg width="18" height="18" viewBox="0 0 21 21">
+                  <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                  <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                  <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                  <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                </svg>
+              </span>
+              <span class="auth-btn-text">Continuar con Microsoft</span>
+            </button>
+
+            <!-- Botón 2: ORCID (Identificador Persistente de Investigadores) -->
+            <button id="splashBtnOrcid" class="btn-auth btn-auth-orcid" type="button" title="Iniciar sesión con su identificador ORCID (OIDC)" onclick="handleLoginOrcid()">
+              <span class="auth-btn-icon">
+                <svg width="18" height="18" viewBox="0 0 256 256">
+                  <path fill="#A6CE39" d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z"/>
+                  <g fill="#FFF">
+                    <path d="M86.3,186.2H70.9V79.1h15.4V186.2z"/>
+                    <path d="M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,92.4v80.5h24.8c29.3,0,42.5-17.7,42.5-40.3c0-23.7-14.7-40.2-42.3-40.2H124.3z"/>
+                    <circle cx="78.6" cy="57.5" r="9.3"/>
+                  </g>
+                </svg>
+              </span>
+              <span class="auth-btn-text">Continuar con ORCID</span>
+            </button>
+
+            <!-- Botón 3: GitHub (Desarrolladores y repositorios de código abierto) -->
+            <button id="splashBtnGithub" class="btn-auth btn-auth-github" type="button" title="Iniciar sesión con su cuenta de GitHub" onclick="handleLoginGithub()">
+              <span class="auth-btn-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+              </span>
+              <span class="auth-btn-text">Continuar con GitHub</span>
+            </button>
+          </div>
+
+          <!-- Mensaje de estado / errores en español -->
+          <div id="splashAuthAlert" class="auth-alert-box" style="display: none;" role="alert"></div>
+
+          <!-- Botón de exploración como invitado (el PDF se mantiene bloqueado hasta iniciar sesión) -->
+          <div class="guest-access-row">
+            <button id="splashGuestBtn" class="btn-guest-link" type="button" title="Explorar el generador como invitado (la descarga de PDF requerirá inicio de sesión)">
+              Explorar herramienta como invitado →
+            </button>
+          </div>
+
           <div class="splash-footer-note">
             <span>Vicerrectoría de Investigación e Innovación · UCA</span>
           </div>
@@ -97,7 +144,10 @@ Powered by: Claude.ai/Google AI Studio
               <strong>
                 Universidad Centroamericana José Simeón Cañas · Vicerrectoría de Investigación e Innovación
               </strong>
-              — Plan de Gestión de Software de Investigación basado en SSI y la guía eScience Center / NWO
+              — Plan de Gestión de Software de Investigación basado en
+              <a href="https://www.software.ac.uk/guide/writing-and-using-software-management-plan" target="_blank" rel="noopener" class="topbar-ref-link" title="The Software Sustainability Institute (sitio externo)">The Software Sustainability Institute</a>,
+              la <a href="https://www.esciencecenter.nl/software/" target="_blank" rel="noopener" class="topbar-ref-link" title="Netherlands eScience Center (sitio externo)">guía del Netherlands eScience Center</a>
+              y la iniciativa de <a href="https://www.nwo.nl/en/digital-infrastructure" target="_blank" rel="noopener" class="topbar-ref-link" title="Infraestructura Digital NWO (sitio externo)">Infraestructura Digital de NWO</a>.
             </p>
           </div>
         </div>
@@ -144,7 +194,7 @@ Powered by: Claude.ai/Google AI Studio
                 <span class="resource-icon"></span> Zenodo Micelio
               </a>
               <a
-                href="https://github.com/Kahernandezg/Research-Data-Management-Plan-RDMP-Generator"
+                href="https://github.com/Kahernandezg/Software-Management-Plan-SMP-Generator"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="github-badge-btn"
@@ -156,6 +206,54 @@ Powered by: Claude.ai/Google AI Studio
                 />
               </a>
             </div>
+
+            <!-- Contenedor de usuario autenticado en la barra superior -->
+            <div id="topbarAuthContainer" class="topbar-auth-container">
+              <!-- Estado cuando NO hay sesión -->
+              <div id="topbarUnauthenticated" class="topbar-unauth-row">
+                <button
+                  type="button"
+                  id="topbarLoginBtn"
+                  class="btn btn-outline btn-topbar-login"
+                  onclick="openLoginModal()"
+                  title="Iniciar sesión con Microsoft, ORCID o GitHub"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                  </svg>
+                  <span>Iniciar sesión</span>
+                </button>
+              </div>
+
+              <!-- Estado cuando SÍ hay sesión activa -->
+              <div id="topbarAuthenticated" class="topbar-user-badge" style="display: none;">
+                <div class="user-avatar-wrapper" id="userAvatarWrapper">
+                  <img id="topbarUserPhoto" class="user-avatar-img" alt="Foto de perfil del usuario" style="display: none;" />
+                  <div id="topbarUserAvatarFallback" class="user-avatar-fallback">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                </div>
+                <div class="user-info-text">
+                  <span id="topbarUserName" class="user-name">Usuario</span>
+                  <span id="topbarProviderBadge" class="user-provider-badge">Microsoft</span>
+                </div>
+                <button
+                  type="button"
+                  id="topbarLogoutBtn"
+                  class="btn btn-outline btn-logout"
+                  onclick="handleLogout()"
+                  title="Cerrar sesión activa"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+
             <button class="btn btn-accent" onclick="generatePDF()" title="Descargar documento PDF">⬇ Descargar PDF</button>
           </div>
         </div>
@@ -247,6 +345,88 @@ Powered by: Claude.ai/Google AI Studio
         </div>
       </div>
     </div>
+
+    <!-- Modal de Inicio de Sesión (para invocar desde la barra superior o bloqueo de PDF) -->
+    <div id="loginModal" class="auth-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+      <div class="auth-modal-card">
+        <button type="button" class="modal-close-btn" onclick="closeLoginModal()" title="Cerrar ventana">×</button>
+        <div class="modal-header-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2C5EA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+        </div>
+        <h3 id="loginModalTitle" class="modal-title">Iniciar sesión institucional</h3>
+        <p class="modal-subtitle">Elija su proveedor para autenticar su cuenta, sincronizar metadatos y habilitar la descarga del documento PDF.</p>
+
+        <div class="auth-buttons-grid modal-auth-grid">
+          <button class="btn-auth btn-auth-microsoft" type="button" onclick="handleLoginMicrosoft()">
+            <span class="auth-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+            </span>
+            <span class="auth-btn-text">Continuar con Microsoft</span>
+          </button>
+
+          <button class="btn-auth btn-auth-orcid" type="button" onclick="handleLoginOrcid()">
+            <span class="auth-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 256 256"><path fill="#A6CE39" d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z"/><g fill="#FFF"><path d="M86.3,186.2H70.9V79.1h15.4V186.2z"/><path d="M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,92.4v80.5h24.8c29.3,0,42.5-17.7,42.5-40.3c0-23.7-14.7-40.2-42.3-40.2H124.3z"/><circle cx="78.6" cy="57.5" r="9.3"/></g></svg>
+            </span>
+            <span class="auth-btn-text">Continuar con ORCID</span>
+          </button>
+
+          <button class="btn-auth btn-auth-github" type="button" onclick="handleLoginGithub()">
+            <span class="auth-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </span>
+            <span class="auth-btn-text">Continuar con GitHub</span>
+          </button>
+        </div>
+
+        <div id="modalAuthAlert" class="auth-alert-box" style="display: none;" role="alert"></div>
+      </div>
+    </div>
+
+    <!-- Modal de Requisito de Sesión para descarga de PDF -->
+    <div id="pdfAuthRequiredModal" class="auth-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle">
+      <div class="auth-modal-card">
+        <button type="button" class="modal-close-btn" onclick="closePdfAuthModal()" title="Cerrar ventana">×</button>
+        <div class="modal-header-icon warning-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D98C3D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h3 id="pdfModalTitle" class="modal-title">Autenticación requerida para descargar PDF</h3>
+        <p class="modal-subtitle">Para generar y descargar el Plan de Gestión de Software (SMP) en formato PDF institucional, debe iniciar sesión con una cuenta de Microsoft, ORCID o GitHub.</p>
+
+        <div class="auth-buttons-grid modal-auth-grid">
+          <button class="btn-auth btn-auth-microsoft" type="button" onclick="handleLoginMicrosoft()">
+            <span class="auth-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+            </span>
+            <span class="auth-btn-text">Iniciar sesión con Microsoft</span>
+          </button>
+
+          <button class="btn-auth btn-auth-orcid" type="button" onclick="handleLoginOrcid()">
+            <span class="auth-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 256 256"><path fill="#A6CE39" d="M256,128c0,70.7-57.3,128-128,128C57.3,256,0,198.7,0,128C0,57.3,57.3,0,128,0C198.7,0,256,57.3,256,128z"/><g fill="#FFF"><path d="M86.3,186.2H70.9V79.1h15.4V186.2z"/><path d="M108.9,79.1h41.6c39.6,0,57,28.3,57,53.6c0,27.5-21.5,53.6-56.8,53.6h-41.8V79.1z M124.3,92.4v80.5h24.8c29.3,0,42.5-17.7,42.5-40.3c0-23.7-14.7-40.2-42.3-40.2H124.3z"/><circle cx="78.6" cy="57.5" r="9.3"/></g></svg>
+            </span>
+            <span class="auth-btn-text">Iniciar sesión con ORCID</span>
+          </button>
+
+          <button class="btn-auth btn-auth-github" type="button" onclick="handleLoginGithub()">
+            <span class="auth-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </span>
+            <span class="auth-btn-text">Iniciar sesión con GitHub</span>
+          </button>
+        </div>
+
+        <div id="pdfModalAuthAlert" class="auth-alert-box" style="display: none;" role="alert"></div>
+      </div>
+    </div>
+
     <script src="script.js"></script>
   </body>
 </html>
